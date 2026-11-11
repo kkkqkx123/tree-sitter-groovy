@@ -41,6 +41,7 @@ module.exports = grammar({
     [$._callable_expression, $.juxt_function_call],
     [$._callable_expression, $._juxt_argument_list],
     [$._juxtable_expression, $._juxt_argument_list],
+    [$.enum_constant, $._juxtable_expression],
   ],
 
   rules: {
@@ -212,14 +213,14 @@ module.exports = grammar({
       repeat($.annotation),
       optional($.access_modifier),
       repeat($.modifier),
-      choice('@interface', 'interface', 'class'),
+      choice('@interface', 'interface', 'class', 'enum'),
       field('name', choice($.identifier, $._type_identifier)),
       optional(field('generics', $.generic_parameters)),
       optional(seq(
         'extends',
         field('superclass', $._primary_expression),
       )),
-      field('body', $.closure),
+      field('body', choice($.closure, $.enum_body)),
     ),
 
     generic_parameters: $ => seq(
@@ -242,6 +243,13 @@ module.exports = grammar({
       // repeat(choice($._statement, $._expression)),
       repeat($._statement),
       optional($._expression),
+      '}'
+    ),
+
+    enum_body: $ => seq(
+      '{',
+      $.enum_constants,
+      optional(seq(';', repeat($._statement), optional($._expression))),
       '}'
     ),
 
@@ -315,6 +323,17 @@ module.exports = grammar({
         ),
       ),
     ),
+
+    enum_constant: $ => prec.right(seq(
+      field('name', $.identifier),
+      optional(field('args', $.argument_list)),
+    )),
+
+    enum_constants: $ => prec.left(seq(
+      $.enum_constant,
+      repeat(seq(',', $.enum_constant)),
+      optional(','),
+    )),
 
     parenthesized_expression: ($) =>
       prec(PREC.PRIORITY, choice(
