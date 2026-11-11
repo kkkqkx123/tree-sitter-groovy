@@ -4,8 +4,8 @@ typedef struct TSLanguage TSLanguage;
 
 TSLanguage *tree_sitter_groovy(void);
 
-static PyObject* _binding_language(PyObject *self, PyObject *args) {
-    return PyLong_FromVoidPtr(tree_sitter_groovy());
+static PyObject* _binding_language(PyObject *self, PyObject *Py_UNUSED(args)) {
+    return PyCapsule_New(tree_sitter_groovy(), "tree_sitter.Language", NULL);
 }
 
 static PyMethodDef methods[] = {
